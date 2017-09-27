@@ -1,13 +1,19 @@
 package com.lking.collect.data.ui.main;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -17,6 +23,9 @@ import com.lking.collect.data.ui.fill.FillFragment;
 import com.lking.collect.data.ui.mine.MineFragment;
 import com.lking.collect.data.ui.query.QueryFragment;
 import com.lking.collect.data.ui.synchronous.SynchronousFragment;
+import com.lking.collect.data.ui.util.ViewTools;
+
+import java.util.ArrayList;
 
 public class MainActivity extends Activity implements View.OnClickListener{
     private TextView mTitleTxt;
@@ -41,11 +50,25 @@ public class MainActivity extends Activity implements View.OnClickListener{
     /** 百度定位获取*/
     public LocationClient mLocationClient = null;
     public BDLocationListener myListener = new MyLocationListener();
+
+
+    /** 需要请求的权限集合*/
+    private ArrayList<String> mPermissionsList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        startLocate();
+        mPermissionsList = new ArrayList<>();
+        //这两个属于一类权限
+        mPermissionsList.add(Manifest.permission.ACCESS_COARSE_LOCATION);//网络定位权限
+        mPermissionsList.add(Manifest.permission.ACCESS_FINE_LOCATION);//GPS定位权限
+
+        mPermissionsList.add(Manifest.permission.READ_PHONE_STATE);//手机状态权限
+        mPermissionsList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);//向扩展卡写入数据
+        if (ViewTools.checkPermission(this,mPermissionsList)) {
+            startLocate();
+        }
+
         //注册监听函数
         initViews();
     }
@@ -177,46 +200,25 @@ public class MainActivity extends Activity implements View.OnClickListener{
         //开启定位
         mLocationClient.start();
     }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    startLocate();
+                } else {
+                    Toast.makeText(this,"定位权限拒绝",Toast.LENGTH_SHORT).show();
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+        }
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
